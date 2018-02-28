@@ -1,0 +1,32 @@
+elasticdump \
+  --input=http://search-dpd-production-54zwdl2rua7ways72pbpsewymy.ap-southeast-1.es.amazonaws.com/dpd-production-new \
+  --output=/home/nandakumar/Desktop/Projects/doopaadoo/elasticsearch/backup/prod-v2.3/20170518/dpd-production-new_data.json \
+  --type=data
+
+elasticdump \
+  --input=http://search-dpd-production-54zwdl2rua7ways72pbpsewymy.ap-southeast-1.es.amazonaws.com/dpd-production-new \
+  --output=/home/nandakumar/Desktop/Projects/doopaadoo/elasticsearch/backup/prod-v2.3/20170518/dpd-production-new_mapping.json \
+  --type=mapping
+
+
+elasticdump \
+  --input=http://search-dpd-production-54zwdl2rua7ways72pbpsewymy.ap-southeast-1.es.amazonaws.com/dpd-production \
+  --output=/home/nandakumar/Desktop/Projects/doopaadoo/elasticsearch/backup/prod-v2.3/20170518/dpd-production_data.json \
+  --type=data
+
+elasticdump \
+  --input=http://search-dpd-production-54zwdl2rua7ways72pbpsewymy.ap-southeast-1.es.amazonaws.com/dpd-production \
+  --output=/home/nandakumar/Desktop/Projects/doopaadoo/elasticsearch/backup/prod-v2.3/20170518/dpd-production_mapping.json \
+  --type=mapping
+
+
+
+elasticdump \
+  --input=http://search-dpd-production-54zwdl2rua7ways72pbpsewymy.ap-southeast-1.es.amazonaws.com/search-production \
+  --output=/home/nandakumar/Desktop/Projects/doopaadoo/elasticsearch/backup/prod-v2.3/20170518/search-production_data.json \
+  --type=data
+
+elasticdump \
+  --input=http://search-dpd-production-54zwdl2rua7ways72pbpsewymy.ap-southeast-1.es.amazonaws.com/search-production \
+  --output=/home/nandakumar/Desktop/Projects/doopaadoo/elasticsearch/backup/prod-v2.3/20170518/search-production_mapping.json \
+  --type=mapping

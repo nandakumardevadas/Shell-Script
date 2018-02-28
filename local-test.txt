@@ -1,0 +1,189 @@
+#!/bin/bash
+cd $WORKSPACE
+
+git config --global user.email "testingjenkins@ihorsetechnologies.com"
+
+git config --global user.name "Testing Jenkins"
+
+#check the project already exist
+echo "################## checking project already exist ##################"
+if [ ! -d "api" ]; then
+        echo "################## No ##################"
+        mkdir api
+        mkdir web
+
+        echo "################## git clone project ##################"
+        git clone git@icms.ihorsetechnologies.com:php/tulyps.git
+        cd tulyps
+
+    git config core.fileMode false
+
+        #checkout to develop-web
+        echo "################## git checkout develop-web ##################"
+        git checkout testing-web
+
+        #install composer
+        echo "################## composer install ##################"
+        php composer_install.php
+
+        #publish vendor
+        echo "################## vendor publish ##################"
+        php artisan vendor:publish
+
+        #clear composer cache
+        echo "################## composer dump-autoload ##################"
+        composer dump-autoload
+
+        #copy as web folder
+        echo "################## copy to web folder ##################"
+        cp -rf . ../web/
+
+        #checkout to dev branch
+        echo "################## git checkout develop-api ##################"
+        git checkout testing-api
+
+        #install composer
+        echo "################## composer install ##################"
+        php composer_install.php
+
+
+        #publish vendor
+        echo "################## vendor publish ##################"
+        php artisan vendor:publish
+
+        #clear composer cache
+        echo "################## composer dump-autoload ##################"
+        composer dump-autoload
+
+        #copy as api folder
+        echo "################## copy to api folder ##################"
+        cp -rf . ../api/
+
+        #remove the tulps foler
+        echo "################## remove original tulyps folder ##################"
+        cd ../
+        rm -rf tulyps
+else
+        echo "################## Yes ##################"
+        #update api branch
+        echo "################## cd api ##################"
+        cd $WORKSPACE
+        cd api/
+
+        #checkout to web branch
+        echo "################## git checkout develop-api ##################"
+        git checkout testing-api
+
+        #pull the latest code
+        echo "################## git pull ##################"
+        git pull
+
+        #install composer
+        echo "################## composer update ##################"
+        php composer_install.php update
+
+        #publish vendor
+        echo "################## vendor publish ##################"
+        php artisan vendor:publish
+
+        #clear composer cache
+        echo "################## composer dump-autoload ##################"
+        composer dump-autoload
+
+        #remove old .env
+        echo "################## remove old .env ##################"
+        rm -f .env
+
+        #update web branch
+        echo "################## cd web ##################"
+        cd $WORKSPACE
+        cd web/
+
+        #checkout to testing-web
+        echo "################## git checkout feature/paytm ##################"
+        git checkout testing-web
+
+        #pull the latest code
+        echo "################## git pull ##################"
+        git pull
+
+        #install composer
+        echo "################## composer update ##################"
+        php composer_install.php update
+
+        #publish vendor
+        echo "################## vendor publish ##################"
+        php artisan vendor:publish
+
+        #clear composer cache
+        echo "################## composer dump-autoload ##################"
+        composer dump-autoload
+
+        #remove old .env
+        echo "################## remove old .env ##################"
+        rm -f .env
+
+fi
+
+#copy env file to api
+echo "################## download new .env from s3 to api ##################"
+cd $WORKSPACE
+cd api/
+s3cmd get --recursive s3://jenkins-ipaadal/env/test/live/api/
+
+
+#copy env file to web
+echo "################## download new .env from s3 to web ##################"
+cd $WORKSPACE
+cd web/
+s3cmd get --recursive s3://jenkins-ipaadal/env/test/live/web/
+
+
+#run gulp to build css and js
+cd $WORKSPACE
+cd web/public/
+npm install
+gulp --production
+
+#remove old css &amp; js from s3
+s3cmd del --recursive s3://doopaadoo-videos-output/test/build/
+
+#upload new css and js to s3
+s3cmd put --recursive build/* s3://doopaadoo-videos-output/test/build/
+
+echo "################## rsync to dev server ##################"
+cd $WORKSPACE
+rsync -rav --exclude=".git" --exclude="node_modules" ./ root@test-web.doopaadoo.com:/var/www/html/
+
+
+echo "################## Change folder permission ##################"
+ssh root@test-web.doopaadoo.com chmod -R 777 /var/www/html
+
+
+echo "################## DB migreation on dev ##################"
+ssh root@test-web.doopaadoo.com php /var/www/html/web/artisan migrate
+
+#copy env file to api preview
+echo "################## download new .env from s3 to api ##################"
+cd $WORKSPACE
+cd api/
+rm .env
+s3cmd get --recursive s3://jenkins-ipaadal/env/test/preview/api/
+
+#copy env file to web preview
+echo "################## download new .env from s3 to web ##################"
+cd $WORKSPACE
+cd web/
+rm .env
+s3cmd get --recursive s3://jenkins-ipaadal/env/test/preview/web/
+
+
+echo "################## rsync to dev preview server ##################"
+cd $WORKSPACE
+rsync -rav --exclude=".git" --exclude="node_modules" ./ root@test-web-vcms.doopaadoo.com:/var/www/html/test/
+
+echo "################## Change folder permission ##################"
+ssh root@test-web.doopaadoo.com chmod -R 777 /var/www/html
+
+echo "################## DB migreation on dev ##################"
+ssh root@test-web-vcms.doopaadoo.com php /var/www/html/test/web/artisan migrate
